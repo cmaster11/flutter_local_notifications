@@ -280,11 +280,7 @@ typedef NS_ENUM(NSInteger, RepeatInterval) {
         }
         notificationDetails.repeatInterval = @([call.arguments[REPEAT_INTERVAL] integerValue]);
     }
-    if(@available(iOS 10.0, *)) {
-        [self showUserNotification:notificationDetails];
-    } else {
-        [self showLocalNotification:notificationDetails];
-    }
+    [FlutterLocalNotificationsPlugin showLocalNotification:notificationDetails];
     result(nil);
 }
 
@@ -349,7 +345,7 @@ typedef NS_ENUM(NSInteger, RepeatInterval) {
     }
 }
 
-- (NSDictionary*)buildUserDict:(NSNumber *)id title:(NSString *)title presentAlert:(bool)presentAlert presentSound:(bool)presentSound presentBadge:(bool)presentBadge payload:(NSString *)payload {
++ (NSDictionary*)buildUserDict:(NSNumber *)id title:(NSString *)title presentAlert:(bool)presentAlert presentSound:(bool)presentSound presentBadge:(bool)presentBadge payload:(NSString *)payload {
     NSDictionary *userDict =[NSDictionary dictionaryWithObjectsAndKeys:id, NOTIFICATION_ID, title, TITLE, [NSNumber numberWithBool:presentAlert], PRESENT_ALERT, [NSNumber numberWithBool:presentSound], PRESENT_SOUND, [NSNumber numberWithBool:presentBadge], PRESENT_BADGE, payload, PAYLOAD, nil];
     return userDict;
 }
@@ -358,7 +354,7 @@ typedef NS_ENUM(NSInteger, RepeatInterval) {
     return userInfo != nil && userInfo[NOTIFICATION_ID] && userInfo[TITLE] && userInfo[PRESENT_ALERT] && userInfo[PRESENT_SOUND] && userInfo[PRESENT_BADGE] && userInfo[PAYLOAD];
 }
 
-- (void) showUserNotification:(NotificationDetails *) notificationDetails NS_AVAILABLE_IOS(10.0) {
++ (void) showUserNotification:(NotificationDetails *) notificationDetails NS_AVAILABLE_IOS(10.0) {
     UNMutableNotificationContent* content = [[UNMutableNotificationContent alloc] init];
     UNNotificationTrigger *trigger;
     content.title = notificationDetails.title;
@@ -429,7 +425,12 @@ typedef NS_ENUM(NSInteger, RepeatInterval) {
     
 }
 
-- (void) showLocalNotification:(NotificationDetails *) notificationDetails {
++ (void) showLocalNotification:(NotificationDetails *) notificationDetails {
+    if(@available(iOS 10.0, *)) {
+        [FlutterLocalNotificationsPlugin showUserNotification:notificationDetails];
+        return;
+    }
+    
     UILocalNotification *notification = [[UILocalNotification alloc] init];
     notification.alertBody = notificationDetails.body;
     notification.applicationIconBadgeNumber = [notificationDetails.badgeNumber integerValue];
